@@ -189,6 +189,22 @@ static uint16_t VCP_DataTx (/*COM_TypeDef Com,*/ uint8_t* DataBuf, uint16_t Len)
     return USBD_OK;
 }
 
+
+//передача данных в копьютер
+uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len){
+	uint8_t x;
+  for (x=0; x<Len; x++){
+	APP_DATA_Buffer[AppBufInPtr] = Buf[x];
+    AppBufInPtr++;
+  }
+  /* To avoid buffer overflow */
+  if(AppBufInPtr == APP_RX_DATA_SIZE)  {
+   AppBufInPtr = 0;
+  }
+  return USBD_OK;
+}
+
+
 /**
   * @brief  Virtual usart received over USB Rx endpoint are sent over real usart
   * @note   Before exiting this function, the function will block any OUT packet reception on USB endpoint 
@@ -345,7 +361,7 @@ void	printcan1(void)
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.Data[7]));
 				buf[num_bytes++] = '\r';
 				
-				VCP_DataTx (buf, num_bytes);
+				CDC_DataTx (buf, num_bytes);
 			
 	}
 

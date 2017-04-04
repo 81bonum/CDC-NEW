@@ -40,7 +40,7 @@ LINE_CODING;
 void  GDEVAL_COM1_IRQHandler (void);
 void  GDEVAL_COM2_IRQHandler (void);
 void printcan1 (void);
-
+uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len);
 #endif /* __GD32F10X_USBD_CDC_VCP_H */
 
 /************************ (C) COPYRIGHT 2014 GIGADEVICE *****END OF FILE****/

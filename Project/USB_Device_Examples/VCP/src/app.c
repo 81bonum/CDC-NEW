@@ -23,7 +23,6 @@ RCC_ClocksPara RCC_Clocks;
 extern int	can1_resive0;				//признак что приняли в буфер и можно распечатать
 /* Private functions ---------------------------------------------------------*/
 extern void printcan1(void);
-extern uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len);
 void Delay (uint32_t ms);
 
 /**
@@ -49,11 +48,11 @@ int main(void)
     /* Main loop */
     while (1)
     {
-//					if (can1_resive0 == 1)
-//					{
-//						printcan1();
-//						can1_resive0=0;
-//					}
+				if (can1_resive0 == 1)
+					{
+						printcan1();
+						can1_resive0=0;
+					}
 
     }
 }

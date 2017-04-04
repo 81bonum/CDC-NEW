@@ -4,7 +4,7 @@
   * @author  Illarionov Maksim
   * @version V1.0.0
   * @date    03-Apr-2017
-  * @brief   Leds, keys periph config
+  * @brief   Управление вводом выводом
   ******************************************************************************
   */
 	
@@ -34,7 +34,7 @@ void LEDInit(Leds_TypeDef LedNum)
 }
 
 /**
-  * @brief  Turn on selected LED 
+  * @brief  Включение выбранного светодиода
   * @param  LedNum: Specifies the Led to be turn on
   * @retval None
   */
@@ -44,7 +44,7 @@ void LEDOn(Leds_TypeDef LedNum)
 }
 
 /**
-  * @brief  Turn off selected LED
+  * @brief  Выключение выбранного светодиода
   * @param  LedNum: Specifies the Led to be turn off 
   * @retval None
   */
@@ -54,7 +54,7 @@ void LEDOff(Leds_TypeDef LedNum)
 }
 
 /**
-  * @brief  Toggle the selected LED
+  * @brief  Дернуть ногой
   * @param  LedNum: Specifies the Led to be toggled
   * @retval None
   */

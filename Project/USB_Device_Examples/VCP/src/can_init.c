@@ -20,7 +20,7 @@
 #include "can_init.h"
 #include "periph.h"
 
-int	can1_resive0;				//признак что приняли в буфер и можно распечатать
+int	can1_resive0 = 0;				//признак что приняли в буфер и можно распечатать
 
 CanRxMessage msg_buf_can;
 CanTxMessage TxMessage;
@@ -142,6 +142,7 @@ void CAN1_RX0_IRQHandler(void)
 //			}
 			if (RxMessage.StdId == CAN_CMD_Test_Ok)			// 
 			{
+				can1_resive0 = 1;
 				LEDToggle(LED2);
 			}
 		}

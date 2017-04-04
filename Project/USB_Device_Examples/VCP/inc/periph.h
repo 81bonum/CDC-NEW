@@ -6,7 +6,7 @@
   * @author  Illarionov Maksim
   * @version V1.0.0
   * @date    03-Apr-2017
-  * @brief   Leds, keys periph config
+  * @brief   ”правление вводом выводом
   ******************************************************************************
   */
 

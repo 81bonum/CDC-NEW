@@ -53,7 +53,6 @@ static void  USBD_CDC_AsynchXferHandle (void *pudev);
   */
 extern CDC_IF_Fop_TypeDef APP_FOPS;
 extern uint8_t USBD_DeviceDesc[USB_DEVICE_DESC_SIZE];
-extern uint16_t CDC_DataTx(uint8_t* DataBuf, uint16_t Len);
 static __IO uint32_t  USBD_CDC_AltSet = 0;
 
 uint8_t USB_DATA_Buffer[USB_CDC_DATA_PACKET_SIZE];
