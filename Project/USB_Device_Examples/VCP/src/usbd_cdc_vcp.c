@@ -11,6 +11,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_vcp.h"
 #include "usb_conf.h"
+#include "periph.h"
+
+
+#define APP_TX_DATA_SIZE  1000
+uint32_t ptrWriteUserTxBufferFS = 0 ; 
+uint32_t ptrReadUserTxBufferFS = 0 ; 
+
+
+
+
 
 /* Private variables ---------------------------------------------------------*/
 LINE_CODING linecoding =
@@ -32,6 +42,7 @@ extern uint32_t AppBufInPtr;
 
 extern CanTxMessage TxMessage;
 extern CanRxMessage RxMessage;
+extern void Delay(uint32_t ms);
 
 /* Private function prototypes ----------------------------------------------- */
 static uint16_t  VCP_Init      (uint8_t Config);
@@ -180,27 +191,48 @@ static uint16_t VCP_DataTx (/*COM_TypeDef Com,*/ uint8_t* DataBuf, uint16_t Len)
 				APP_DATA_Buffer[AppBufInPtr] = DataBuf[x];
 			  AppBufInPtr++;
 		}
+		
     /* To avoid buffer overflow */
     if(AppBufInPtr == APP_RX_DATA_SIZE)
     {
         AppBufInPtr = 0;
+				LEDToggle(LED1);
     }
 
     return USBD_OK;
 }
 
+uint8_t CDC_add_buf_to_transmit(uint8_t* Buf, uint16_t Len)
+{
+ uint16_t _cnt = Len ;
+ 	
+ while(_cnt)
+  {
+	 APP_DATA_Buffer[AppBufInPtr] = *Buf ;	
+	 AppBufInPtr++;
+	 Buf++ ; 
+	 AppBufInPtr %= APP_TX_DATA_SIZE ;
+	 _cnt--;
+  }	 
+ return(0);
+}
 
-//передача данных в копьютер
-uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len){
+
+//передача данных на комп
+uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len)
+{
 	uint8_t x;
-  for (x=0; x<Len; x++){
-	APP_DATA_Buffer[AppBufInPtr] = Buf[x];
+  for (x=0; x<Len; x++)
+	{
+		APP_DATA_Buffer[AppBufInPtr] = Buf[x];
     AppBufInPtr++;
   }
-  /* To avoid buffer overflow */
-  if(AppBufInPtr == APP_RX_DATA_SIZE)  {
-   AppBufInPtr = 0;
-  }
+  /* Если приняли больше APP_RX_DATA */
+  if(AppBufInPtr == APP_RX_DATA_SIZE)
+		{
+			AppBufInPtr = 0;
+		}
+		
   return USBD_OK;
 }
 
@@ -325,7 +357,7 @@ uint8_t halfbyte_to_hexascii(uint8_t _halfbyte)
 void	printcan1(void)
 	{
 				uint32_t num_bytes ;
-				uint8_t buf[512] ;
+				uint8_t buf[28] ;
 			
 				num_bytes = 0 ;
 				buf[num_bytes++] = '\n' ;
@@ -361,8 +393,7 @@ void	printcan1(void)
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.Data[7]));
 				buf[num_bytes++] = '\r';
 				
-				CDC_DataTx (buf, num_bytes);
-			
+				CDC_add_buf_to_transmit (buf, num_bytes);
 	}
 
 /************************ (C) COPYRIGHT 2014 GIGADEVICE *****END OF FILE****/
