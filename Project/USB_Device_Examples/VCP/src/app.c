@@ -20,9 +20,11 @@
 /* Private variables ---------------------------------------------------------*/
 USB_OTG_CORE_HANDLE USB_OTG_dev;
 RCC_ClocksPara RCC_Clocks;
-extern int	can1_resive0;				//признак что приняли в буфер и можно распечатать
+extern int	can1_resive0;				//признак что приняли в буфер и можно отправить на USB
+
 /* Private functions ---------------------------------------------------------*/
 extern void printcan1(void);
+extern void printcan_test(void);
 void Delay (uint32_t ms);
 
 /**
@@ -50,7 +52,7 @@ int main(void)
     {
 				if (can1_resive0 == 1)
 					{
-						printcan1();
+						printcan_test();
 						can1_resive0=0;
 					}
 
