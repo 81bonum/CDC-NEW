@@ -133,19 +133,9 @@ void CAN1_RX0_IRQHandler(void)
 	if (CAN_GetIntBitState(CAN1, CAN_INT_RFNE0) != RESET)		// 
 	{
 		CAN_Receive(CAN1, CAN_FIFO0, &RxMessage);
+		can1_resive0 = 1;
+		LEDToggle(LED2);
 
-		if (RxMessage.FF == CAN_FF_STANDARD)
-		{
-//			if (RxMessage.StdId == CAN_CMD_Test_Send)		// 
-//			{
-//				CAN_Send_Ok();
-//			}
-			if (RxMessage.StdId == CAN_CMD_Test_Ok)			// 
-			{
-				can1_resive0 = 1;
-				LEDToggle(LED2);
-			}
-		}
 	}
 }
 
