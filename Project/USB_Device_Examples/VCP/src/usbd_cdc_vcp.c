@@ -12,13 +12,13 @@
 #include "usbd_cdc_vcp.h"
 #include "usb_conf.h"
 #include "periph.h"
-
+#include <stdio.h>
 
 #define APP_TX_DATA_SIZE  1000
 uint32_t ptrWriteUserTxBufferFS = 0 ; 
 uint32_t ptrReadUserTxBufferFS = 0 ; 
-
-
+char 		sdstring[64];
+char 		strhex[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 
 
 
@@ -226,16 +226,15 @@ uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len)
 	{
 		APP_DATA_Buffer[AppBufInPtr] = Buf[x];
     AppBufInPtr++;
-  }
+ 
   /* Если приняли больше APP_RX_DATA */
   if(AppBufInPtr == APP_RX_DATA_SIZE)
 		{
 			AppBufInPtr = 0;
 		}
-		
+	 }
   return USBD_OK;
 }
-
 
 /**
   * @brief  Virtual usart received over USB Rx endpoint are sent over real usart
@@ -346,6 +345,21 @@ static uint16_t VCP_COMConfig(uint8_t Config)
     return USBD_OK;
 }
 
+void USB_send_one(uint8_t data)
+{
+  APP_DATA_Buffer[0] = data;
+	CDC_DataTx(APP_DATA_Buffer, 1);	// отдаем по 1 элементу
+}
+//-------------------------------------------------------------------------------------------------------
+//выведем строку в виртуальный порт usb
+//пока не достигли конца строки вызываем USB_Send_Data, увеличивая указатель на элемент в строке
+void	usb_out(char *pString)
+{
+	  while (*pString != 0x00)
+	{ 
+		USB_send_one(*pString++);		//положим символ в буфер
+	}
+}
 
 uint8_t halfbyte_to_hexascii(uint8_t _halfbyte)
 	{
@@ -354,16 +368,68 @@ uint8_t halfbyte_to_hexascii(uint8_t _halfbyte)
 				else               return('0' + _halfbyte) ; 
 	}
 
+void printcan_test(void)
+{
+	char sdsh, sdsl;
+	uint8_t	dshell, i;
+	
+	sprintf(sdstring, "\r\n");
+	usb_out(sdstring);
+	sprintf(sdstring, "STD_ID_HB: "); 	//старший байт стандартного заголовка
+	usb_out(sdstring);
+	dshell = (RxMessage.StdId & 0x0F00)>>8;
+	sdsh=strhex[((dshell & 0xF0)>>4)];				//выделим старший символ
+	sdsl=strhex[(dshell & 0x0F)];							//выделим младший символ
+	USB_send_one(sdsh);												//отправим в usb
+	USB_send_one(sdsl);												//отправим в usb
+	USB_send_one(' ');												//напечатаем пробел
+	
+
+	sprintf(sdstring, "\x1b[31;1mSTD_ID_LB: \x1b[0m");		//младший байт стандартного заголовка
+	usb_out(sdstring);
+	dshell = RxMessage.StdId & 0xFF;
+	sdsh=strhex[((dshell & 0xF0)>>4)];				//выделим старший символ
+	sdsl=strhex[(dshell & 0x0F)];							//выделим младший символ
+	USB_send_one(sdsh);												//отправим в usb
+	USB_send_one(sdsl);												//отправим в usb
+	USB_send_one(' ');												//напечатаем пробел
+	
+	
+	sprintf(sdstring, "DLC: ");								//длинна
+	usb_out(sdstring);
+	dshell = RxMessage.DLC;
+	sdsh = strhex[((dshell & 0xF0)>>4)];
+	sdsl=strhex[(dshell & 0x0F)];	
+	USB_send_one(sdsh);
+	USB_send_one(sdsl);
+	USB_send_one(' ');	
+	
+	
+	sprintf(sdstring, "DATA: ");							//поле данных все 8 банок в цикле
+	usb_out(sdstring);
+	for(i=0; i<8; i++)
+	{
+		dshell = RxMessage.Data[i];
+		sdsh = strhex[((dshell & 0xF0)>>4)];
+		sdsl = strhex[(dshell & 0x0F)];
+		USB_send_one(sdsh);
+		USB_send_one(sdsl);
+		USB_send_one(' ');
+	}
+	
+}
+	
+	
 void	printcan1(void)
 	{
 				uint32_t num_bytes ;
-				uint8_t buf[28] ;
+				uint8_t buf[512] ;
 			
 				num_bytes = 0 ;
 				buf[num_bytes++] = '\n' ;
-//			buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>8);
-//			buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>4);
-//			buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId));
+				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>8);
+				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>4);
+				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId));
 				buf[num_bytes++] = ' ' ;
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.DLC)>>4);
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.DLC));
@@ -393,7 +459,7 @@ void	printcan1(void)
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.Data[7]));
 				buf[num_bytes++] = '\r';
 				
-				CDC_add_buf_to_transmit (buf, num_bytes);
+				CDC_DataTx (buf, num_bytes);
 	}
 
 /************************ (C) COPYRIGHT 2014 GIGADEVICE *****END OF FILE****/
