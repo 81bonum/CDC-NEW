@@ -35,6 +35,8 @@ LINE_CODING linecoding =
 USART_InitPara USART_InitStructure;
 
 /* Application buffer which's data will be sent over USB CDC device IN endpoint */
+void	usb_out(char *pString);
+void USB_send_one(uint8_t data);
 extern uint8_t  APP_DATA_Buffer[];
 
 /* Increment this pointer or roll it back to start pointer when writing received data to the APP_Buffer */
@@ -196,26 +198,12 @@ static uint16_t VCP_DataTx (/*COM_TypeDef Com,*/ uint8_t* DataBuf, uint16_t Len)
     if(AppBufInPtr == APP_RX_DATA_SIZE)
     {
         AppBufInPtr = 0;
-				LEDToggle(LED1);
+				
     }
 
     return USBD_OK;
 }
 
-uint8_t CDC_add_buf_to_transmit(uint8_t* Buf, uint16_t Len)
-{
- uint16_t _cnt = Len ;
- 	
- while(_cnt)
-  {
-	 APP_DATA_Buffer[AppBufInPtr] = *Buf ;	
-	 AppBufInPtr++;
-	 Buf++ ; 
-	 AppBufInPtr %= APP_TX_DATA_SIZE ;
-	 _cnt--;
-  }	 
- return(0);
-}
 
 
 //передача данных на комп
@@ -226,6 +214,7 @@ uint16_t CDC_DataTx (uint8_t* Buf, uint32_t Len)
 	{
 		APP_DATA_Buffer[AppBufInPtr] = Buf[x];
     AppBufInPtr++;
+				LEDToggle(LED1);
  
   /* Если приняли больше APP_RX_DATA */
   if(AppBufInPtr == APP_RX_DATA_SIZE)
@@ -355,10 +344,10 @@ void USB_send_one(uint8_t data)
 //пока не достигли конца строки вызываем USB_Send_Data, увеличивая указатель на элемент в строке
 void	usb_out(char *pString)
 {
-	  while (*pString != 0x00)
-	{ 
-		USB_send_one(*pString++);		//положим символ в буфер
-	}
+	while (*pString != 0x00)
+		{ 
+			USB_send_one(*pString++);		//положим символ в буфер
+		}
 }
 
 uint8_t halfbyte_to_hexascii(uint8_t _halfbyte)
@@ -375,7 +364,7 @@ void printcan_test(void)
 	
 	sprintf(sdstring, "\r\n");
 	usb_out(sdstring);
-	sprintf(sdstring, "STD_ID_HB: "); 	//старший байт стандартного заголовка
+	sprintf(sdstring, "%s", "STD_ID_HB: "); 	//старший байт стандартного заголовка
 	usb_out(sdstring);
 	dshell = (RxMessage.StdId & 0x0F00)>>8;
 	sdsh=strhex[((dshell & 0xF0)>>4)];				//выделим старший символ
@@ -383,7 +372,7 @@ void printcan_test(void)
 	USB_send_one(sdsh);												//отправим в usb
 	USB_send_one(sdsl);												//отправим в usb
 	USB_send_one(' ');												//напечатаем пробел
-	
+
 
 	sprintf(sdstring, "\x1b[31;1mSTD_ID_LB: \x1b[0m");		//младший байт стандартного заголовка
 	usb_out(sdstring);
@@ -423,13 +412,14 @@ void printcan_test(void)
 void	printcan1(void)
 	{
 				uint32_t num_bytes ;
-				uint8_t buf[512] ;
-			
+				uint8_t buf[512] ;	
 				num_bytes = 0 ;
 				buf[num_bytes++] = '\n' ;
-				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>8);
-				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>4);
-				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId));
+				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.StdId)>>28);
+				buf[num_bytes++] = halfbyte_to_hexascii(((RxMessage.StdId)>>24)&0xF);
+				buf[num_bytes++] = ' ' ;
+				buf[num_bytes++] = halfbyte_to_hexascii((((RxMessage.StdId)>>16)&0xF0)>>4);
+				buf[num_bytes++] = halfbyte_to_hexascii(((RxMessage.StdId)>>16)&0xF);
 				buf[num_bytes++] = ' ' ;
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.DLC)>>4);
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.DLC));
@@ -458,7 +448,6 @@ void	printcan1(void)
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.Data[7])>>4);
 				buf[num_bytes++] = halfbyte_to_hexascii((RxMessage.Data[7]));
 				buf[num_bytes++] = '\r';
-				
 				CDC_DataTx (buf, num_bytes);
 	}
 
