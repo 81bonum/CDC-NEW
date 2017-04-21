@@ -574,15 +574,16 @@ void CAN_Receive(CAN_TypeDef* CANx, uint8_t FIFONumber, CanRxMessage* RxMessage)
 {
     /* Get the frame identifier */
     RxMessage->FF = (uint8_t)0x04 & CANx->FIFOMailBox[FIFONumber].RFMIR;
-    if (RxMessage->FF == CAN_FF_STANDARD)
-    {
-        RxMessage->StdId = CAN_TMIR_StdId_Mask & (CANx->FIFOMailBox[FIFONumber].RFMIR >> 21);
-    }
-    else
-    {
-        RxMessage->ExtId = CAN_TMIR_ExtId_Mask & (CANx->FIFOMailBox[FIFONumber].RFMIR >> 3);
-    }
-    
+		RxMessage->StdId = /*CAN_TMIR_StdId_Mask &*/ (CANx->FIFOMailBox[FIFONumber].RFMIR);
+//    if (RxMessage->FF == CAN_FF_STANDARD)
+//    {
+//       
+//    }
+//    else
+//    {
+//        RxMessage->ExtId = CAN_TMIR_ExtId_Mask & (CANx->FIFOMailBox[FIFONumber].RFMIR >> 3);
+//    }
+
     RxMessage->FT = (uint8_t)0x02 & CANx->FIFOMailBox[FIFONumber].RFMIR;
     /* Get the data length code */
     RxMessage->DLC = (uint8_t)0x0F & CANx->FIFOMailBox[FIFONumber].RFMPR;
